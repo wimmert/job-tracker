@@ -454,58 +454,66 @@ const ScrapingStatus: React.FC<ScrapingStatusProps> = ({ onManualScrape }) => {
     setIsScrapingCompany(companySlug)
     setShowLogs(true)
     setScrapingLogs([])
-    
+
+    if (!user) {
+      addLog('❌ User not authenticated. Cannot scrape jobs.')
+      setIsScrapingCompany(null)
+      return
+    }
     try {
+      addLog(`🔄 Starting real website scraping for ${companyName}...`)
+      
       // Get real job count BEFORE scraping
       const jobCountBefore = realJobCounts[companyName] || 0
       
-      const result = await simulateScrapingProgress(companyName)
+      // Call the REAL Netlify function
+      const response = await fetch('/.netlify/functions/manual-scraper', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company: companyName })
+      })
       
-      // Remove jobs if simulation indicates some were removed
-      let actualRemovedJobs = 0
-      if (result.removedJobs > 0) {
-        actualRemovedJobs = await removeSimulatedJobs(companyName, result.removedJobs)
-      }
+      const result = await response.json()
       
-      // Actually add new jobs to the system
-      let actualNewJobs = 0
-      if (result.newJobs > 0) {
-        actualNewJobs = await addSimulatedJobs(companyName, result.newJobs)
-      }
-      
-      // Reload real job counts after scraping
-      const newCounts = await loadRealJobCounts()
-      
-      // Get real job count AFTER scraping from returned values
-      const jobCountAfter = newCounts?.jobCounts[companyName] || 0
-      
-      // Create comprehensive toast message
-      let toastMessage = `${companyName} scraping completed!`
-      if (actualNewJobs > 0 && actualRemovedJobs > 0) {
-        toastMessage += ` Added ${actualNewJobs} new jobs, removed ${actualRemovedJobs} jobs (Total: ${jobCountAfter} jobs)`
-      } else if (actualNewJobs > 0) {
-        toastMessage += ` Added ${actualNewJobs} new jobs (Total: ${jobCountAfter} jobs)`
-      } else if (actualRemovedJobs > 0) {
-        toastMessage += ` Removed ${actualRemovedJobs} jobs (Total: ${jobCountAfter} jobs)`
+      if (result.success) {
+        addLog(`✅ Found ${result.jobsFound} real jobs from ${companyName} website`)
+        addLog(`💾 Processing and saving jobs...`)
+        
+        // Add the real scraped jobs to your system
+        if (result.jobs && result.jobs.length > 0) {
+          await api.addScrapedJobs(user.id, companyName, result.jobs)
+        }
+        
+        // Reload real job counts after scraping
+        const updatedCounts = await loadRealJobCounts()
+        
+        // Get real job count AFTER scraping
+        const updatedJobCountAfter = updatedCounts?.jobCounts[companyName] || 0
+        const updatedActualNewJobs = Math.max(0, updatedJobCountAfter - jobCountBefore)
+        
+        addLog(`🎯 Scraping completed! Added ${updatedActualNewJobs} real jobs from ${companyName}`)
+        
+        toast.success(`${companyName} scraping completed! Found ${result.jobsFound} jobs, added ${updatedActualNewJobs} new jobs`)
+        
+        // Update company status with real data
+        setCompanyStatuses(prev => prev.map(c => 
+          c.slug === companySlug 
+            ? { 
+                ...c, 
+                newJobs: updatedActualNewJobs,
+                removedJobs: 0,
+                lastRun: new Date().toISOString(),
+                status: 'success' as const
+              }
+            : c
+        ))
+        
       } else {
-        toastMessage += ` No changes (Total: ${jobCountAfter} jobs)`
+        addLog(`❌ Scraping failed: ${result.error}`)
+        toast.error(`Failed to scrape ${companyName}: ${result.error}`)
       }
       
-      toast.success(toastMessage)
       onManualScrape?.()
-      
-      // Update the specific company's newJobs count with the actual number added
-      setCompanyStatuses(prev => prev.map(c => 
-        c.slug === companySlug 
-          ? { 
-              ...c, 
-              newJobs: actualNewJobs,
-              removedJobs: actualRemovedJobs,
-              lastRun: new Date().toISOString(),
-              status: 'success' as const
-            }
-          : c
-      ))
       
     } catch (error: any) {
       addLog(`❌ ${companyName} scraping failed: ${error.message}`)
