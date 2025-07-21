@@ -261,58 +261,7 @@ class MockAPI {
       experienceLevel: job.experienceLevel || 'mid',
       description: job.description,
       applicationUrl: job.applicationUrl || `https://${companyName.toLowerCase().replace(/\s+/g, '')}.com/careers`,
-      status: 'active',
-      firstSeenAt: new Date().toISOString(),
-      lastSeenAt: new Date().toISOString(),
-      daysPosted: 0,
-      salaryMin: job.salaryMin || null,
-      salaryMax: job.salaryMax || null,
-      requirements: job.requirements || [],
-      benefits: job.benefits || [],
-      created: new Date().toISOString(),
-      updated: new Date().toISOString(),
-      expand: {
-        company: company
-      }
-    }))
-    
-    // Add jobs to the global mockJobs array
-    mockJobs.push(...formattedJobs)
-    
-    // Save to localStorage for persistence
-    this.saveJobsToStorage()
-    
-    console.log(`✅ Added ${formattedJobs.length} jobs to mockJobs array`)
-    console.log(`📊 Total jobs in system: ${mockJobs.length}`)
-    
-    return formattedJobs.length
-  }
-
-  // Add scraped jobs to the system
-  async addScrapedJobs(userId: string, companyName: string, newJobs: any[]): Promise<number> {
-    await mockDelay(200)
-    
-    console.log(`🔄 Adding ${newJobs.length} scraped jobs for ${companyName}`)
-    
-    // Find the company to get proper company data
-    const company = mockCompanies.find(c => c.name === companyName)
-    if (!company) {
-      console.warn(`Company ${companyName} not found in mockCompanies`)
-      return 0
-    }
-    
-    // Convert scraped jobs to proper Job format
-    const formattedJobs = newJobs.map((job, index) => ({
-      id: `scraped_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
-      company: companyName,
-      title: job.title,
-      department: job.department,
-      location: job.location,
-      jobType: job.jobType || 'full_time',
-      experienceLevel: job.experienceLevel || 'mid',
-      description: job.description,
-      applicationUrl: job.applicationUrl || `https://${companyName.toLowerCase().replace(/\s+/g, '')}.com/careers`,
-      status: 'active',
+      status: 'active' as const,
       firstSeenAt: new Date().toISOString(),
       lastSeenAt: new Date().toISOString(),
       daysPosted: 0,
@@ -453,14 +402,14 @@ class MockAPI {
     )
 
     const now = new Date().toISOString()
-    const stageEntry = { stage, date: now, notes: notes || '' }
+    const stageEntry = { stage: stage as any, date: now, notes: notes || '' }
 
     if (existingIndex > -1) {
       // Update existing application
       const existing = applications[existingIndex]
       const updatedApp: JobApplication = {
         ...existing,
-        stage,
+        stage: stage as any,
         appliedAt: stage === 'applied' && !existing.appliedAt ? now : existing.appliedAt,
         notes: notes || existing.notes,
         stageHistory: [...(existing.stageHistory || []), stageEntry],
@@ -476,7 +425,7 @@ class MockAPI {
         id: `app_${Date.now()}`,
         user: userId,
         job: jobId,
-        stage,
+        stage: stage as any,
         appliedAt: stage === 'applied' ? now : null,
         notes: notes || null,
         stageHistory: [stageEntry],

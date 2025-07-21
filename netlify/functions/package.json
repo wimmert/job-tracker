@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@netlify/functions": "^2.6.0",
-    "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12",
+    "axios": "^1.10.0",
+    "cheerio": "^1.1.1",
     "pocketbase": "^0.21.1"
   },
   "keywords": [
@@ -19,5 +19,8 @@
     "job-tracker"
   ],
   "author": "Job Tracker",
-  "license": "MIT"
+  "license": "MIT",
+  "directories": {
+    "lib": "lib"
+  }
 }
