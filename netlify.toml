@@ -1,0 +1,30 @@
+[build]
+  functions = "netlify/functions"
+  publish = "dist"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Environment variables for functions
+[context.production.environment]
+  POCKETBASE_URL = "https://your-pocketbase-instance.com"
+  POCKETBASE_ADMIN_EMAIL = "admin@yourapp.com"
+  POCKETBASE_ADMIN_PASSWORD = "your-secure-password"
+
+[context.deploy-preview.environment]
+  POCKETBASE_URL = "http://127.0.0.1:8090"
+  POCKETBASE_ADMIN_EMAIL = "admin@example.com"
+  POCKETBASE_ADMIN_PASSWORD = "admin123456"
+
+[context.branch-deploy.environment]
+  POCKETBASE_URL = "http://127.0.0.1:8090"
+  POCKETBASE_ADMIN_EMAIL = "admin@example.com"
+  POCKETBASE_ADMIN_PASSWORD = "admin123456"

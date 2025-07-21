@@ -1,0 +1,23 @@
+{
+  "name": "job-tracker-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for Job Tracker web scraping",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@netlify/functions": "^2.6.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "pocketbase": "^0.21.1"
+  },
+  "keywords": [
+    "netlify",
+    "functions",
+    "web-scraping",
+    "job-tracker"
+  ],
+  "author": "Job Tracker",
+  "license": "MIT"
+}
